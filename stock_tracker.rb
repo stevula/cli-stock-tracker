@@ -3,24 +3,34 @@ require 'json'
 
 class StockTracker
   def initialize
-    @quotes = get_quote_data["list"]["resources"]
-    symbols = get_symbols
-    # get_current_values(symbols)
+    @all_stocks      = get_all_quote_data["list"]["resources"]
+    symbols          = request_symbols
+    requested_stocks = find_stocks(symbols)
+    print_current_values(requested_stocks)
   end
 
-  def get_quote_data
+  def get_all_quote_data
     url = "http://finance.yahoo.com/webservice/v1/symbols/allcurrencies/quote?format=json"
     JSON.load(open(url))
   end
 
-  def get_symbols
+  def request_symbols
     puts "Please enter the symbols you would like to check, separated by commas:"
     gets.gsub(/\s+/, "").upcase.split(",")
   end
 
-  def get_current_values(symbols)
-    values = @quotes.select {|resource| symbols.include? resource["fields"]["symbol"][0..2]}
-    p values
+  def find_stocks(symbols)
+    @all_stocks.select do |stock| 
+      symbol = stock["resource"]["fields"]["symbol"][0..2]
+      symbols.include? symbol
+    end
+  end
+
+  def print_current_values(stocks)
+    stocks.each do |stock| 
+      stock = stock["resource"]["fields"]
+      puts "#{stock['symbol']}: #{stock['price']}"
+    end
   end
 end
 
